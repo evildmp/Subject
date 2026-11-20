@@ -27,3 +27,61 @@ And this is how objective cognition is possible.
 In the experience of beauty, we're not making cognitive judgements about objective reality. Judgement is still at work, but it's *undetermined* by rules - the understanding is unconstrained by determinate concepts.
 
 The understanding remains engaged with the imagination, in what Kant calls "lawfulness without a law": this harmonious free play is the source of the aesthetic pleasure we experience.
+
+Modelling the experience in MicroPython
+=======================================
+
+If we can model that in MicroPython, it should be possible for a computer to enjoy the same experience, and that seems only fair.
+
+The subject comes into existence
+--------------------------------
+
+The ``__main__`` entry-point creates an instance of ``Subject`` - our subject of experience that is about to flower into being::
+
+    subject = Subject()
+
+When it's initialised, it acquires sensibility and imagination, also modelled as instances of classes representing those faculties::
+
+    class Subject:
+
+        def __init__(self):
+            self.sensibility = Sensibility(self)
+            self.imagination = Imagination(self)
+
+(Very appropriately for working on a model of Kant's metaphysics of the self, following Python conventions means we're using ``self`` to refer to the subject.)
+
+Sensibility
+-----------
+
+``Sensibility`` implies a ``Manifold`` of impressions::
+
+    class Sensibility:
+
+        def __init__(self, subject):
+            self.manifold = Manifold()
+
+The ``Manifold`` contains the impressions that are present to the subject at any given moment, and that (as Hume said) "succeed each other with an inconceivable rapidity, and are in a perpetual flux and movement".
+
+You'll notice in the code that ``Sensibility``'s ``__init__()`` sets up a ``LowPassFilter`` on each of the three modes of sensibility that it has available to it (motion, sound, light). This is perfectly legitimate: the micro:bit's sensors would otherwise be too noisy and it's an analogue of the way that our own sensory organs smooth and filter their inputs.
+
+Time is always present in sensibility. Impressions are in time; they must be, it's part of their form. At this moment time - a condition of experience - has not yet started for the subject, but even so it and its sensibility are structured according to the pure form of time.
+
+The imagination
+---------------
+
+The imagination is more complex. Sensibility is passive, but the imagination actively synthesises representations - discrete events, out of sensory impressions.
+
+The only kind of event that the imagination can synthesise is a pulse. Whether these are pulses of motion, sound or light, their form is similar, even if the content is entirely different. And in each case, a pulse of course only exists in a series of pulses.
+
+For each mode of sensibility, the imagination makes use of the generic ``PulseSynthesiser`` class::
+
+    class Imagination:
+
+        def __init__(self, subject):
+            self.pulse_synthesisers = {
+                    "sound": PulseSynthesiser(),
+                    "motion": PulseSynthesiser(),
+                    "light": PulseSynthesiser(),
+                }
+
+A PulseSynthesiser gives us events in time, in which the most recent events are represented most distinctly, and older ones quickly fade out of the "present moment". That present moment constructed by the imagination lasts about a second.
