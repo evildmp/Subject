@@ -1,0 +1,10 @@
+[project]
+name = "subject"
+version = "0.1.0"
+requires-python = ">=3.11"
+
+[project.optional-dependencies]
+dev = ["pytest", "mpremote"]
+
+[tool.pytest.ini_options]
+testpaths = ["testing/test_subject.py"]
