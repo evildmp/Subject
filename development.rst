@@ -5,7 +5,7 @@ Development
 How tests work
 ==============
 
-The test suite runs under desktop Python using ``pytest`` (in ``.venv/bin/pytest``) rather than on the micro:bit hardware.
+The test suite runs under desktop Python using ``pytest`` rather than on the micro:bit hardware.
 
 Hardware and clock stubs
 ------------------------
@@ -18,13 +18,14 @@ Hardware and clock stubs
 Unit and dataset replay tests
 -----------------------------
 
-* **Unit tests** exercise ``Subject``, ``Sensibility`` (``Manifold`` and ``LowPassFilter``), ``PulseSynthesiser``, and ``Expression`` against synthetic inputs (quiet baselines, single pulses, and repeated pulses).
-* **Dataset replay tests** read recorded CSV files from ``datasets/``, set the fake clock to each row's ``t_ms``, feed samples through ``affect()`` and ``next(subject.running)``, and check detected pulses against beat tempos and baseline silence/rest expectations:
+* **Unit tests** exercise ``Subject``, ``Sensibility`` (``Manifold`` and ``LowPassFilter``), ``PulseSynthesiser``, ``EqualityOfInterval`` (``apply_rule()``), ``Understanding``, and ``Expression`` against synthetic inputs (quiet baselines, single pulses, steady/irregular intervals, overdue lapse, and display output).
+* **Dataset replay tests** read recorded CSV files from ``datasets/``, set the fake clock to each row's ``t_ms``, feed samples through ``affect()`` and ``next(subject.running)``, and check detected pulses and ``Understanding`` confidence against beat tempos, handling, and baseline silence/rest expectations:
 
-  * Tempo checks (``test_replay_motion_90bpm``, ``test_replay_motion_150bpm``):
+  * Tempo and handling checks (``test_replay_motion_90bpm``, ``test_replay_motion_150bpm``, ``test_understanding_recognises_jumping_and_rejects_handling``):
 
     * ``jumping_90bpm.csv``
     * ``jumping_150bpm.csv``
+    * ``everyday_handling.csv``
 
   * Baseline zero-pulse checks (``test_replay_baseline_datasets_produce_no_pulses``):
 
@@ -46,11 +47,21 @@ Raw sensor datasets in ``datasets/`` record sensor values with timestamps; the C
 How to run tests
 ================
 
-Create a virtual environment and install the development dependencies::
+Create and activate a virtual environment, then install the development dependencies::
 
     python3 -m venv .venv
-    .venv/bin/pip install -e ".[dev]"
+    source .venv/bin/activate
+    pip install -e ".[dev]"
 
 Run the test suite from the repository root::
 
-    .venv/bin/pytest -v
+    pytest -v
+
+Flashing the micro:bit
+======================
+
+The most convenient way to flash the micro:bit will often be (with the virtual environment activated of course)::
+
+    mpremote fs cp subject.py :main.py + reset
+
+This  copies ``subject.py`` to ``main.py`` on the micro:bit and resets it.

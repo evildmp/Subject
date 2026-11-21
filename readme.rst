@@ -47,6 +47,7 @@ When it's initialised, it acquires sensibility and imagination, also modelled as
         def __init__(self):
             self.sensibility = Sensibility(self)
             self.imagination = Imagination(self)
+            self.understanding = Understanding(self)
 
 (Very appropriately for working on a model of Kant's metaphysics of the self, following Python conventions means we're using ``self`` to refer to the subject.)
 
@@ -79,9 +80,31 @@ For each mode of sensibility, the imagination makes use of the generic ``PulseSy
 
         def __init__(self, subject):
             self.pulse_synthesisers = {
-                    "sound": PulseSynthesiser(),
-                    "motion": PulseSynthesiser(),
-                    "light": PulseSynthesiser(),
-                }
+                "sound": PulseSynthesiser(),
+                "motion": PulseSynthesiser(),
+                "light": PulseSynthesiser(),
+            }
 
-A PulseSynthesiser gives us events in time, in which the most recent events are represented most distinctly, and older ones quickly fade out of the "present moment". That present moment constructed by the imagination lasts about a second.
+A ``PulseSynthesiser`` gives us events in time, in which the most recent events are represented most distinctly, and older ones quickly fade out of the "present moment". That present moment constructed by the imagination lasts about a second.
+
+The understanding
+-----------------
+
+The ``Imagination`` gives us representations as events in time; the ``Understanding`` brings them under a rule. The only rule available so far is ``EqualityOfInterval``, in which pulses can be recognised as a regular series.
+
+First, ``Understanding.judge()`` applies the rules to the representations in the imagination. That allows it to recognise the series, but also to ``anticipate()`` the next pulse, according to the same rule.
+
+That expectation feeds back to the imagination: the understanding proposes the next pulse before it occurs, and the an act of the productive imagination holds a representation of that not-yet-existent event.
+
+In this way the rule is expressed in the actual series of events, but also in the imagination's *represented* series of events. In line with our own experience of formal patterns acquired through the senses, the imagination fills in gaps or can even "correct" what we actually apprehend, based on the rule at work.
+
+In the mutual agreement of the faculties, when what the imagination apprehends conforms freely with the lawfulness of the understanding (when the predictions according to the rule are fulfilled) the pleasure of beauty arises.
+
+For the micro:bit, this is expressed as *confidence*, that grows as successive successful predictions are achieved.
+
+Expression
+----------
+
+Kant has little to say about the somatic expression of aesthetic pleasure, but for the purposes of this model we need some insight into the internal states of the micro:bit.
+
+An ``Expression`` class takes care of that. ``confidence`` is shown growing on the micro:bit's display, and after continued predictive success, it ventures to express its own prediction in anticipation.
