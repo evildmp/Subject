@@ -219,6 +219,19 @@ def test_understanding_recognises_jumping_and_rejects_handling(env):
     assert max_confidence(env, "everyday_handling.csv", "strength", "motion", "motion") < subject_mod.DELIGHT_CONFIDENCE
 
 
+def test_understanding_recognises_sound_120bpm(env):
+    cases = (
+        ("sound_120bpm_short.csv", 7),
+        ("sound_120bpm_1.csv", 38),
+        ("sound_120bpm_2.csv", 52),
+        ("sound_120bpm_3.csv", 58),
+        ("sound_120bpm_wide.csv", 35),
+        ("sound_120bpm_4.csv", 30),
+    )
+    for filename, min_conf in cases:
+        assert max_confidence(env, filename, "sound_level", "sound", "sound") >= min_conf, filename
+
+
 def test_understanding_anticipates_due_schema_once(env):
     import subject as subject_mod
 

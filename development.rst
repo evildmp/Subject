@@ -64,4 +64,4 @@ The most convenient way to flash the micro:bit will often be (with the virtual e
 
     mpremote fs cp subject.py :main.py + reset
 
-This  copies ``subject.py`` to ``main.py`` on the micro:bit and resets it.
+This copies ``subject.py`` to ``main.py`` on the micro:bit and resets it.

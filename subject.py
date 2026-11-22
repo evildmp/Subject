@@ -106,7 +106,7 @@ class Imagination:
     def __init__(self, subject):
         self.subject = subject
         self.pulse_synthesisers = {
-            "sound": PulseSynthesiser(),
+            "sound": PulseSynthesiser(time_constant=2000.0, k=2.3, floor=10.0),
             "motion": PulseSynthesiser(floor=15.0, min_impulse=2000.0),
             "light": PulseSynthesiser(),
         }
