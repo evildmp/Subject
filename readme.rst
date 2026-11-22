@@ -5,7 +5,7 @@ Subject
 Introduction
 ============
 
-Many people say they like computers, but then it turns out that they never do anything nice for their computers, they just like what the computers csn do for them. Which is quite selfish, really.
+Many people say they like computers, but then it turns out that they never do anything nice for their computers, they just like what the computers can do for them. Which is quite selfish, really.
 
 Subject is an attempt to do a bit better, by providing a computer with an experience it will actually enjoy; specifically, the experience of *beauty* - aesthetic pleasure.
 
@@ -65,7 +65,7 @@ The ``Manifold`` contains the impressions that are present to the subject at any
 
 You'll notice in the code that ``Sensibility``'s ``__init__()`` sets up a ``LowPassFilter`` on each of the three modes of sensibility that it has available to it (motion, sound, light). This is perfectly legitimate: the micro:bit's sensors would otherwise be too noisy and it's an analogue of the way that our own sensory organs smooth and filter their inputs.
 
-Time is always present in sensibility. Impressions are in time; they must be, it's part of their form. At this moment time - a condition of experience - has not yet started for the subject, but even so it and its sensibility are structured according to the pure form of time.
+Time is always present in sensibility. Impressions are in time; they must be, it's part of their form. Even before experience starts for the subject, it and its sensibility are structured according to the pure form of time.
 
 The imagination
 ---------------
@@ -94,7 +94,7 @@ The ``Imagination`` gives us representations as events in time; the ``Understand
 
 First, ``Understanding.judge()`` applies the rules to the representations in the imagination. That allows it to recognise the series, but also to ``anticipate()`` the next pulse, according to the same rule.
 
-That expectation feeds back to the imagination: the understanding proposes the next pulse before it occurs, and the an act of the productive imagination holds a representation of that not-yet-existent event.
+That expectation feeds back to the imagination: the understanding proposes the next pulse before it occurs, and an act of the productive imagination holds a representation of that not-yet-existent event.
 
 In this way the rule is expressed in the actual series of events, but also in the imagination's *represented* series of events. In line with our own experience of formal patterns acquired through the senses, the imagination fills in gaps or can even "correct" what we actually apprehend, based on the rule at work.
 

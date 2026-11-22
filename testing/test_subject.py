@@ -15,21 +15,19 @@ def replay_csv(env, filename, value_column, attr_name):
             env.now_ms = int(row["t_ms"])
             setattr(env, attr_name, float(row[value_column]))
             subject_mod.affect(s.sensibility)
-            next(s.running)
+            next(s.active)
             pulses.extend(s.imagination.pulses)
     return pulses
 
 
-def test_subject_instantiation_and_lazy_clock(env):
+def test_subject_instantiation_and_sensibility_time(env):
     import subject as subject_mod
 
     s = subject_mod.Subject()
-    assert s.sensibility.start is None
-
     env.now_ms = 500
-    assert s.sensibility.t == 0
+    assert s.sensibility.t == 500
     env.now_ms = 525
-    assert s.sensibility.t == 25
+    assert s.sensibility.t == 525
 
 
 def test_sensibility_manifold_and_filtering(env):
@@ -79,7 +77,7 @@ def test_pulse_synthesiser_detects_single_pulse(env):
     assert p.peak == 1150.0
 
 
-def test_expression_draws_sensor_bars_confidence_and_delight(env):
+def test_expression_draws_sensor_bars_confidence_and_pleasure(env):
     import subject as subject_mod
 
     s = subject_mod.Subject()
@@ -88,7 +86,7 @@ def test_expression_draws_sensor_bars_confidence_and_delight(env):
     env.sound = 128
     env.light = 255
     subject_mod.affect(s.sensibility)
-    next(s.running)
+    next(s.active)
 
     assert [env.pixels[row][0] for row in range(5)] == [5, 5, 5, 5, 5]
     assert [env.pixels[row][2] for row in range(5)] == [5, 5, 5, 5, 5]
@@ -101,7 +99,7 @@ def test_expression_draws_sensor_bars_confidence_and_delight(env):
     s.expression.draw()
     assert [env.pixels[row][0] for row in range(5)] == [5, 5, 5, 9, 9]
 
-    # At confidence 5, delight flashes the full column when expected_t falls due.
+    # At confidence 5, pleasure flashes the full column when expected_t falls due.
     s.understanding.schemas["motion"] = subject_mod.Schema("motion", 500, 1000, 5)
     env.now_ms = 950
     s.expression.draw()
@@ -204,7 +202,7 @@ def max_confidence(env, filename, value_column, attr_name, mode):
             env.now_ms = int(row["t_ms"])
             setattr(env, attr_name, float(row[value_column]))
             subject_mod.affect(s.sensibility)
-            next(s.running)
+            next(s.active)
             schema = s.understanding.schemas.get(mode)
             if schema is not None and schema.confidence > best:
                 best = schema.confidence
@@ -216,7 +214,7 @@ def test_understanding_recognises_jumping_and_rejects_handling(env):
 
     assert max_confidence(env, "jumping_90bpm.csv", "strength", "motion", "motion") >= 10
     assert max_confidence(env, "jumping_150bpm.csv", "strength", "motion", "motion") >= 20
-    assert max_confidence(env, "everyday_handling.csv", "strength", "motion", "motion") < subject_mod.DELIGHT_CONFIDENCE
+    assert max_confidence(env, "everyday_handling.csv", "strength", "motion", "motion") < subject_mod.PLEASURE_CONFIDENCE
 
 
 def test_understanding_recognises_sound_120bpm(env):
@@ -286,7 +284,7 @@ def test_imagination_primed_by_schema_catches_softer_pulse_and_nudges_timing(env
     assert 400 < primed_pulses[0].peak_t <= 410
 
 
-def test_delight_covers_one_missed_pulse_and_enforces_four_beat_cooldown(env):
+def test_pleasure_covers_one_missed_pulse_and_enforces_four_beat_cooldown(env):
     import subject as subject_mod
 
     s = subject_mod.Subject()

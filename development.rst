@@ -10,7 +10,7 @@ The test suite runs under desktop Python using ``pytest`` rather than on the mic
 Hardware and clock stubs
 ------------------------
 
-``subject.py`` depends on MicroPython's ``microbit`` module, ``time.ticks_ms()``, and ``time.ticks_diff()``. A shared ``pytest`` fixture in ``testing/`` provides:
+``subject.py`` depends on MicroPython's ``microbit`` module, ``time.ticks_ms()``. A shared ``pytest`` fixture in ``testing/`` provides:
 
 * A fake ``microbit`` module registered in ``sys.modules["microbit"]`` with controllable ``microphone.sound_level()``, ``accelerometer.get_strength()``, ``display.read_light_level()``, ``temperature()``, and a 5x5 ``display`` buffer for inspecting ``Expression`` output.
 * A controllable millisecond clock patched onto ``time.ticks_ms`` and ``time.ticks_diff`` so tests advance ``Sensibility.t`` deterministically without real-time waiting.
@@ -19,7 +19,7 @@ Unit and dataset replay tests
 -----------------------------
 
 * **Unit tests** exercise ``Subject``, ``Sensibility`` (``Manifold`` and ``LowPassFilter``), ``PulseSynthesiser``, ``EqualityOfInterval`` (``apply_rule()``), ``Understanding``, and ``Expression`` against synthetic inputs (quiet baselines, single pulses, steady/irregular intervals, overdue lapse, and display output).
-* **Dataset replay tests** read recorded CSV files from ``datasets/``, set the fake clock to each row's ``t_ms``, feed samples through ``affect()`` and ``next(subject.running)``, and check detected pulses and ``Understanding`` confidence against beat tempos, handling, and baseline silence/rest expectations:
+* **Dataset replay tests** read recorded CSV files from ``datasets/``, set the fake clock to each row's ``t_ms``, feed samples through ``affect()`` and ``next(subject.active)``, and check detected pulses and ``Understanding`` confidence against beat tempos, handling, and baseline silence/rest expectations:
 
   * Tempo and handling checks (``test_replay_motion_90bpm``, ``test_replay_motion_150bpm``, ``test_understanding_recognises_jumping_and_rejects_handling``):
 

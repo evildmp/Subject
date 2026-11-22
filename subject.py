@@ -4,33 +4,47 @@ import microbit
 import time
 
 
+# sensory constants; cutoff values represent the frequency above which signals are attenuated
+
 MOTION_CUTOFF = 4.0  # Hz
 LIGHT_CUTOFF = 4.0  # Hz
 AUDIO_CUTOFF = 10.0  # Hz
-MOTION_BASELINE = 1070.0
-MOTION_DEVIATION_MAX = 2394.0
+GRAVITATIONAL_ACCELERATION = 1070.0  # gravity is always present
+
+# subject's internal state
+
+PLEASURE_CONFIDENCE = 5  # threshold: confidence instances required for pleasure
+
+# maximimum sensor values for expression calibration
+
+MOTION_DEVIATION_MAX = 2394.0  # not actually a raw sensor value; takes gravity into account
 SOUND_METER_MAX = 128.0
 LIGHT_METER_MAX = 255.0
 SENSOR_BRIGHTNESS = 5
+
+# expression display settings
 CONFIDENCE_BRIGHTNESS = 9
-DELIGHT_FLASH_MS = 80
-DELIGHT_CONFIDENCE = 5
+PLEASURE_FLASH_MS = 80
+
+# the forms of sensory impression and discrete representations in the imagination
 
 Impression = namedtuple("Impression", ("mode", "t", "magnitude"))
 Pulse = namedtuple("Pulse", ("mode", "start_t", "peak_t", "peak"))
 
 
 class Subject:
-    """Cognitive subject whose powers operate within a single running time."""
 
     def __init__(self):
+        #  the faculties
+
         self.sensibility = Sensibility(self)
         self.imagination = Imagination(self)
         self.understanding = Understanding(self)
-        self.expression = Expression(self)
-        self.running = self.run()
 
-    def run(self):
+        self.expression = Expression(self)  # not a faculty
+        self.active = self.attend()
+
+    def attend(self):
         """Running-time generator; steps the subject's powers once per next() call."""
         while True:
             self.imagination.synthesise()
@@ -46,33 +60,33 @@ class Sensibility:
 
     def __init__(self, subject):
         self.subject = subject
-        self.manifold = Manifold()
-        self.start = None
-        get_time = lambda: self.t
+        self.manifold = Manifold()  # impressions are received in the manifold
+
+        # The filters represent smoothing of sensory signals, at the organic level.
         self.filters = {
-            "sound": LowPassFilter(get_time, AUDIO_CUTOFF),
-            "motion": LowPassFilter(get_time, MOTION_CUTOFF),
-            "light": LowPassFilter(get_time, LIGHT_CUTOFF),
+            "sound": LowPassFilter(AUDIO_CUTOFF),
+            "motion": LowPassFilter(MOTION_CUTOFF),
+            "light": LowPassFilter(LIGHT_CUTOFF),
         }
 
     @property
     def t(self):
-        """Elapsed milliseconds since the first read of t; begins at 0 on first access."""
-        if self.start is None:
-            self.start = time.ticks_ms()
-            return 0
-        return time.ticks_diff(time.ticks_ms(), self.start)
+        """Current time in milliseconds; time is the form of sensibility."""
+        return time.ticks_ms()
 
     def receive(self, mode, magnitude):
+        t = self.t
         if mode in self.filters:
-            magnitude = self.filters[mode].update(magnitude)
-        self.manifold.add(Impression(mode, self.t, magnitude))
+            magnitude = self.filters[mode].update(magnitude, t)
+        self.manifold.add(Impression(mode, t, magnitude))
 
 
 class Manifold:
     """Instantaneous sensory manifold holding the current Impression for each mode."""
 
     def __init__(self):
+        # Wwhen populated the impressions dictionary will contain a key for each sense,
+        # and a corresponding Impression namedtuple as its value.
         self.impressions = {}
 
     def add(self, impression):
@@ -82,21 +96,19 @@ class Manifold:
 class LowPassFilter:
     """Single-pole low-pass filter adjusted for elapsed milliseconds."""
 
-    def __init__(self, get_time, cutoff):
-        self.get_time = get_time
+    def __init__(self, cutoff):
         self.decay_rate = 2 * math.pi * cutoff / 1000.0
         self.y = None
-        self.last_elapsed = None
+        self.last_t = None
 
-    def update(self, x):
-        elapsed_time = self.get_time()
+    def update(self, x, t):
         if self.y is None:
             self.y = x
         else:
-            dt = max(0, elapsed_time - self.last_elapsed)
+            dt = max(0, t - self.last_t)
             alpha = 1 - math.exp(-self.decay_rate * dt)
             self.y += alpha * (x - self.y)
-        self.last_elapsed = elapsed_time
+        self.last_t = t
         return self.y
 
 
@@ -105,6 +117,12 @@ class Imagination:
 
     def __init__(self, subject):
         self.subject = subject
+
+        # At present, we only admit of one kind of event: Pulses. There could be others in
+        # the future, but for now, we'll keep it simple. For each sensory mode there is a
+        # PulseSynthesiser, that is able to apprehend discrete events in the stream of
+        # impressions.
+
         self.pulse_synthesisers = {
             "sound": PulseSynthesiser(time_constant=2000.0, k=2.3, floor=10.0),
             "motion": PulseSynthesiser(floor=15.0, min_impulse=2000.0),
@@ -199,6 +217,8 @@ class Understanding:
 
     def __init__(self, subject):
         self.subject = subject
+
+        # a rule recognises a certain kind of formal pattern
         self.rules = {
             "sound": EqualityOfInterval("sound"),
             "motion": EqualityOfInterval("motion"),
@@ -206,7 +226,7 @@ class Understanding:
         }
         self.schemas = {}
         self.anticipated = {}
-        self.last_expected_t = {}
+        self.last_anticipated_t = {}
 
     def judge(self):
         now = self.subject.sensibility.t
@@ -222,13 +242,14 @@ class Understanding:
         now = self.subject.sensibility.t
         self.anticipated = {}
         for mode, schema in self.schemas.items():
-            if schema.is_due(now) and self.last_expected_t.get(mode) != schema.expected_t:
-                self.last_expected_t[mode] = schema.expected_t
+            if schema.is_due(now) and self.last_anticipated_t.get(mode) != schema.expected_t:
+                self.last_anticipated_t[mode] = schema.expected_t
                 self.anticipated[mode] = schema
 
 
 class EqualityOfInterval:
-    """Tracks a provisional temporal interval rule for a single sensory mode."""
+    """Tracks a provisional temporal interval rule for a single sensory mode. This is currently the only rule we have, but any future rules will share the same shape.
+    """
 
     def __init__(self, mode, tolerance=0.2, min_interval=150, max_interval=2000):
         self.mode = mode
@@ -244,7 +265,7 @@ class EqualityOfInterval:
     def schema(self):
         if self.expected_t is None:
             return None
-        can_cover = self.confidence >= DELIGHT_CONFIDENCE and self.beats_since_miss >= 4
+        can_cover = self.confidence >= PLEASURE_CONFIDENCE and self.beats_since_miss >= 4
         return Schema(self.mode, self.interval, self.expected_t, self.confidence, self.tolerance, can_cover)
 
     def apply_rule(self, pulse, now, in_pulse=False):
@@ -320,14 +341,19 @@ class Schema:
 
 
 class Expression:
-    """Renders sensory input (top-down), confidence (bottom-up), and delight onto the display."""
+    """Communicates the internal states and jdugements of the Subject. That includes
+    via the built-in display, and over radio to any micro:bits that might be
+    listening.
+    """
 
     COLUMNS = (("motion", 0), ("sound", 2), ("light", 4))
 
     def __init__(self, subject):
         self.subject = subject
-        self.delight_start = {"motion": None, "sound": None, "light": None}
-        self.last_expected_t = {"motion": None, "sound": None, "light": None}
+        # we need to keep a record of the timestamp when pleasure related to a mode
+        self.pleasure_start = {"motion": None, "sound": None, "light": None}
+        # a record of the last time it was expressed, to help avoid repeating it
+        self.last_expressed_t = {"motion": None, "sound": None, "light": None}
 
     def draw(self):
         now = self.subject.sensibility.t
@@ -338,29 +364,29 @@ class Expression:
             schema = schemas.get(mode)
             confidence = schema.confidence if schema is not None else 0
 
-            if confidence >= DELIGHT_CONFIDENCE:
-                if now >= schema.expected_t and schema.expected_t != self.last_expected_t[mode]:
-                    self.delight_start[mode] = now
-                    self.last_expected_t[mode] = schema.expected_t
+            if confidence >= PLEASURE_CONFIDENCE:
+                if now >= schema.expected_t and schema.expected_t != self.last_expressed_t[mode]:
+                    self.pleasure_start[mode] = now
+                    self.last_expressed_t[mode] = schema.expected_t
 
-                start = self.delight_start[mode]
+                start = self.pleasure_start[mode]
                 if start is not None:
-                    if now - start < DELIGHT_FLASH_MS:
+                    if now - start < PLEASURE_FLASH_MS:
                         for row in range(5):
                             microbit.display.set_pixel(col, row, CONFIDENCE_BRIGHTNESS)
                         continue
-                    self.delight_start[mode] = None
+                    self.pleasure_start[mode] = None
                 for row in range(5):
                     microbit.display.set_pixel(col, row, 0)
                 continue
 
-            self.delight_start[mode] = None
-            self.last_expected_t[mode] = None
+            self.pleasure_start[mode] = None
+            self.last_expressed_t[mode] = None
 
             if mode in impressions:
                 magnitude = impressions[mode].magnitude
                 if mode == "motion":
-                    draw_sensor_bar(col, abs(magnitude - MOTION_BASELINE), MOTION_DEVIATION_MAX)
+                    draw_sensor_bar(col, abs(magnitude - GRAVITATIONAL_ACCELERATION), MOTION_DEVIATION_MAX)
                 elif mode == "sound":
                     draw_sensor_bar(col, magnitude, SOUND_METER_MAX)
                 else:
@@ -387,8 +413,15 @@ def affect(sensibility):
     sensibility.receive("motion", microbit.accelerometer.get_strength())
 
 
+# the entry-point into this world
+
 if __name__ == "__main__":
+    # creates the subject with its powers, and the generator in Subject.attend()
     subject = Subject()
+
+    # the "world loop"
     while True:
+        # the world's objects affect the subject's sensibility
         affect(subject.sensibility)
-        next(subject.running)
+        # advances to the next cycle of the generator
+        next(subject.active)
